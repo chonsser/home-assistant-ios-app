@@ -91,3 +91,6 @@ vendor/bundle
 
 # Local SPM package transient files
 Sources/HADesignSystem/Package.resolved
+
+# Tailcat.xcframework is built locally by Tools/BuildLibTailcat.sh and never committed
+Sources/Tailcat/Frameworks/
