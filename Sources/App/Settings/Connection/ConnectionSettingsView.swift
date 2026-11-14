@@ -257,6 +257,7 @@ struct ConnectionSettingsView: View {
                     valueColor: .secondary
                 )
             }
+            .accessibilityIdentifier(AccessibilityIdentifier.connectionSettingsTailcat.rawValue)
         }
     }
 

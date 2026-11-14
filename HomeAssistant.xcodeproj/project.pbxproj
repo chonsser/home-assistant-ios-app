@@ -22,6 +22,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		7A1C0A700000000000000006 /* TailcatPairingE2ETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1C0A700000000000000005 /* TailcatPairingE2ETests.swift */; };
 		7A1C0A700000000000000002 /* Tailcat.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1C0A700000000000000001 /* Tailcat.xcframework */; };
 		09C9974C22F113423EE3B3DC /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = B19185B1C20DABFD5B0D1B5D /* GRDB */; };
 		1104FCCF253275CF00B8BE34 /* WatchBackgroundRefreshScheduler.test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1104FCCE253275CF00B8BE34 /* WatchBackgroundRefreshScheduler.test.swift */; };
@@ -591,6 +592,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7A1C0A700000000000000005 /* TailcatPairingE2ETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TailcatPairingE2ETests.swift; sourceTree = "<group>"; };
 		7A1C0A700000000000000001 /* Tailcat.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Tailcat.xcframework; path = Sources/Tailcat/Frameworks/Tailcat.xcframework; sourceTree = SOURCE_ROOT; };
 		1104FCCE253275CF00B8BE34 /* WatchBackgroundRefreshScheduler.test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBackgroundRefreshScheduler.test.swift; sourceTree = "<group>"; };
 		110AA57A25B38C02005061A0 /* ServerAlerter.test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAlerter.test.swift; sourceTree = "<group>"; };
@@ -3181,6 +3183,7 @@
 				42E2E0000000000000000010 /* MTLSOnboardingE2ETests.swift */,
 				42E2E000000000000000000E /* RestoredDeviceFlowsRecordingTests.swift */,
 				42E2E000000000000000000A /* E2EFlow.swift */,
+				7A1C0A700000000000000005 /* TailcatPairingE2ETests.swift */,
 				42EDBC3A3002FBD90051FC9B /* Resources */,
 				B699339B1E2338960054453D /* SnapshotHelper.swift */,
 				119DC15724B6A33E00AAB204 /* ZeroLatitude.gpx */,
@@ -4666,6 +4669,7 @@
 				42E2E0000000000000000011 /* MTLSOnboardingE2ETests.swift in Sources */,
 				42E2E000000000000000000F /* RestoredDeviceFlowsRecordingTests.swift in Sources */,
 				42E2E000000000000000000B /* E2EFlow.swift in Sources */,
+				7A1C0A700000000000000006 /* TailcatPairingE2ETests.swift in Sources */,
 				B657A90C1CA646EB00121384 /* HomeAssistantUITests.swift in Sources */,
 				B699339C1E2338960054453D /* SnapshotHelper.swift in Sources */,
 			);

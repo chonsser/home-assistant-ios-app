@@ -19,6 +19,8 @@ struct TailcatSettingsView: View {
                     Text(viewModel.statusText)
                         .foregroundStyle(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier(AccessibilityIdentifier.tailcatSettingsStatus.rawValue)
                 if viewModel.isPaired {
                     HStack {
                         Text(L10n.Settings.ConnectionSection.Tailcat.ActiveUrl.title)
@@ -27,6 +29,8 @@ struct TailcatSettingsView: View {
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                     }
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier(AccessibilityIdentifier.tailcatSettingsActiveConnection.rawValue)
                 }
             } footer: {
                 Text(L10n.Settings.ConnectionSection.Tailcat.footer)

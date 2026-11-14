@@ -163,6 +163,7 @@ struct InvitationView: View {
             }
             .buttonStyle(.primaryButton)
             .disabled(isAccepting)
+            .accessibilityIdentifier(AccessibilityIdentifier.onboardingInvitationAccept.rawValue)
             Button(L10n.Onboarding.Invitation.rejectButton, action: onReject)
                 .tint(Color.haPrimary)
                 .buttonStyle(.secondaryButton)
