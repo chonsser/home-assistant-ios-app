@@ -101,6 +101,9 @@ final class WebhookDetailViewModel: ObservableObject {
         if let url = webhookURL(for: .external) {
             resolvedEndpoints.append(WebhookEndpoint(source: .externalURL, url: url))
         }
+        if let url = webhookURL(for: .tailcat) {
+            resolvedEndpoints.append(WebhookEndpoint(source: .tailcat, url: url))
+        }
         endpoints = resolvedEndpoints
 
         var connection = connectionInfo
@@ -116,6 +119,7 @@ final class WebhookDetailViewModel: ObservableObject {
             case .internal: activeSource = .internalURL
             case .remoteUI: activeSource = .remoteUI
             case .external: activeSource = .externalURL
+            case .tailcat: activeSource = .tailcat
             case .none: activeSource = nil
             }
         }

@@ -81,7 +81,7 @@ struct ConnectionURLView: View {
             return L10n.Settings.ConnectionSection.InternalBaseUrl.headerSubtitle
         case .external:
             return L10n.Settings.ConnectionSection.ExternalBaseUrl.headerSubtitle
-        case .remoteUI, .none:
+        case .remoteUI, .none, .tailcat:
             return nil
         }
     }

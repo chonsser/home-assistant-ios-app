@@ -51,11 +51,11 @@ struct HomeAssistantStandByView: View {
     private var standByContentOpacity: Double { hasAppeared ? 1.0 : 0.0 }
     private var contentOpacity: Double { showsEmptyStateContent ? 1.0 : 0.0 }
     private var configuredURLTypes: [ConnectionInfo.URLType] {
-        [.internal, .external, .remoteUI].filter { urlType in
+        [.internal, .external, .remoteUI, .tailcat].filter { urlType in
             switch urlType {
             case .remoteUI:
                 server.info.connection.useCloud && server.info.connection.address(for: urlType) != nil
-            case .internal, .external:
+            case .internal, .external, .tailcat:
                 server.info.connection.address(for: urlType) != nil
             case .none:
                 false
@@ -477,6 +477,8 @@ struct HomeAssistantStandByView: View {
             .cloudFill
         case .external:
             .network
+        case .tailcat:
+            .lockShield
         case .none:
             .wifiExclamationmark
         }
@@ -501,6 +503,8 @@ struct HomeAssistantStandByView: View {
             L10n.Connection.ActiveUrlType.Toast.remoteUiLink(AppConstants.homeAssistantLinkName)
         case .external:
             L10n.Connection.ActiveUrlType.Toast.external
+        case .tailcat:
+            L10n.Connection.ActiveUrlType.Toast.tailcat
         case .none:
             L10n.Connection.ActiveUrlType.Toast.none
         }
@@ -624,6 +628,8 @@ extension HomeAssistantStandByView {
             URL(string: "https://example.duckdns.org")
         case .remoteUI:
             URL(string: "https://ui.nabu.casa")
+        case .tailcat:
+            URL(string: "http://127.0.0.1:43123")
         case .none:
             nil
         }

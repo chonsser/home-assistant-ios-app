@@ -22,6 +22,7 @@ struct ServerOriginValidator {
             server.info.connection.address(for: .internal),
             server.info.connection.address(for: .external),
             server.info.connection.address(for: .remoteUI),
+            server.info.connection.address(for: .tailcat),
         ]
 
         return Set(urls.compactMap(originKey(url:)))
