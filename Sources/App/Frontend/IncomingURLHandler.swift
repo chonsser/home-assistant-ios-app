@@ -39,6 +39,12 @@ class IncomingURLHandler {
     // swiftlint:disable cyclomatic_complexity
     @discardableResult
     func handle(url: URL) -> Bool {
+        // Handled before anything logs the URL: a pairing link carries the tunnel's secrets.
+        if TailcatPairingLink.isPairingRoute(url) {
+            handleTailcatPairing(url: url)
+            return true
+        }
+
         Current.Log.verbose("Received URL: \(url)")
         var serviceData: [String: String] = [:]
         if let queryItems = url.queryItems {
@@ -234,6 +240,26 @@ class IncomingURLHandler {
             showAlert(title: L10n.errorLabel, message: L10n.UrlHandler.NoService.message(url.host!))
         }
         return true
+    }
+
+    private func handleTailcatPairing(url: URL) {
+        Current.Log.info("Received Tailcat pairing link")
+        let link: TailcatPairingLink
+        do {
+            link = try TailcatPairingLink(url: url)
+        } catch {
+            Current.Log.error("Rejected Tailcat pairing link: \(error)")
+            let alert = UIAlertController(
+                title: L10n.Tailcat.Pairing.Error.title,
+                message: error.localizedDescription,
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: L10n.okLabel, style: .default))
+            coordinator?.present(alert, animated: true, completion: nil)
+            return
+        }
+
+        coordinator?.presentTailcatPairing(link)
     }
 
     @discardableResult

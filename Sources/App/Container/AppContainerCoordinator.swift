@@ -159,6 +159,54 @@ final class AppContainerCoordinator: AppCoordinator {
         }
     }
 
+    func presentTailcatPairing(_ link: TailcatPairingLink) {
+        let servers = Current.servers.all
+        guard let frontend, !servers.isEmpty else {
+            // Onboarding picks the link up once the user continues to the servers list.
+            Current.appSessionValues.inviteTailcatPairing = link
+            return
+        }
+
+        let name = link.name ?? ServerInfo.defaultName
+        let alert = UIAlertController(
+            title: L10n.UrlHandler.Tailcat.Choose.title,
+            message: L10n.UrlHandler.Tailcat.Choose.message(name),
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: L10n.UrlHandler.Tailcat.Choose.newServer, style: .default) { _ in
+            let onboardingView = OnboardingNavigationView(
+                onboardingStyle: .secondary,
+                prefillTailcatPairing: link,
+                shouldDismissOnSuccess: true
+            )
+            frontend.presentOverlayController(
+                controller: onboardingView.embeddedInHostingController(),
+                animated: true
+            )
+        })
+        for server in servers {
+            alert.addAction(UIAlertAction(
+                title: L10n.UrlHandler.Tailcat.Choose.attach(server.info.name),
+                style: .default
+            ) { [weak self] _ in
+                TailcatServerPairing.attach(link.configuration, to: server)
+                let confirmation = UIAlertController(
+                    title: L10n.UrlHandler.Tailcat.Choose.title,
+                    message: L10n.UrlHandler.Tailcat.Attached.message(server.info.name),
+                    preferredStyle: .alert
+                )
+                confirmation.addAction(UIAlertAction(title: L10n.okLabel, style: .default))
+                self?.present(confirmation, animated: true, completion: nil)
+            })
+        }
+        alert.addAction(UIAlertAction(title: L10n.cancelLabel, style: .cancel))
+
+        // A pairing link opens the app to do something, so it takes over from whatever is on screen.
+        dismissPresentedContent { [weak self] in
+            self?.present(alert, animated: true, completion: nil)
+        }
+    }
+
     func dismissPresentedContent(completion: (() -> Void)?) {
         // Clear the SwiftUI bindings before dismissing their controllers: left at `true` they strand the
         // presentation state and block whatever wants to be presented next.

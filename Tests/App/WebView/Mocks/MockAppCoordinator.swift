@@ -66,6 +66,7 @@ final class MockAppCoordinator: AppCoordinator {
     }
 
     func presentInvitation(url: URL?) {}
+    func presentTailcatPairing(_ link: TailcatPairingLink) {}
     func setup() {}
 
     func open(

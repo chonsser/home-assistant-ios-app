@@ -96,6 +96,30 @@ final class OnboardingServersListViewModel: ObservableObject {
         discovery.start()
     }
 
+    /// Onboards the server a Tailcat pairing link points at, signing in through the tunnel.
+    func selectTailcatPairing(
+        _ link: TailcatPairingLink,
+        presenter: OnboardingAuthPresenter,
+        localURL: (TailcatConfiguration) -> URL? = { HANetworkingEnvironment.current.tailcatLocalURL($0) }
+    ) {
+        guard let url = localURL(link.configuration) else {
+            let error = TailcatError(kind: .listenerUnavailable)
+            if Current.isCatalyst {
+                presenter.push(.connectionError(.init(error: error)))
+            } else {
+                self.error = error
+                showError = true
+            }
+            invitationLoading = false
+            return
+        }
+
+        selectInstance(
+            DiscoveredHomeAssistant(tailcat: link.configuration, localURL: url, name: link.name),
+            presenter: presenter
+        )
+    }
+
     func selectInstance(_ instance: DiscoveredHomeAssistant, presenter: OnboardingAuthPresenter) {
         currentlyInstanceLoading = instance
         authPresenter = presenter
@@ -103,7 +127,8 @@ final class OnboardingServersListViewModel: ObservableObject {
         // An instance found over mDNS already carries Home Assistant's instance ID; a URL the user
         // typed or an invitation link does not, so let discovery answer for that address first and
         // onboard under the identifier the discovery flow would have produced.
-        guard !instance.hasHomeAssistantInstanceID else {
+        // A Tailcat tunnel's loopback address is never what mDNS advertises, so there is nothing to wait for.
+        guard !instance.hasHomeAssistantInstanceID, instance.tailcat == nil else {
             authenticate(to: instance, presenter: presenter)
             return
         }
@@ -186,6 +211,10 @@ final class OnboardingServersListViewModel: ObservableObject {
     private func authenticationSucceeded(server: Server) {
         discovery.stop()
         onboardingServer = server
+        // The pairing link is used up: the server now carries its own Tailcat configuration.
+        if server.info.connection.tailcat != nil {
+            Current.appSessionValues.inviteTailcatPairing = nil
+        }
         clearSensorSelectionForFirstRun()
         // Advance the pushed auth flow directly into the permissions steps.
         authPresenter?.push(.permissions(server))

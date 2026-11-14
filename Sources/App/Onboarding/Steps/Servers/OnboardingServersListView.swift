@@ -33,14 +33,19 @@ struct OnboardingServersListView: View {
     @State private var contentHeight: CGFloat = 0
 
     private let prefillURL: URL?
+    private let prefillTailcatPairing: TailcatPairingLink?
     private let onboardingStyle: OnboardingStyle
 
     private var invitationURL: URL? {
         prefillURL ?? Current.appSessionValues.inviteURL
     }
 
+    private var tailcatInvitation: TailcatPairingLink? {
+        prefillTailcatPairing ?? Current.appSessionValues.inviteTailcatPairing
+    }
+
     private var shouldShowInvitation: Bool {
-        invitationURL != nil && !rejectedInvitation
+        (invitationURL != nil || tailcatInvitation != nil) && !rejectedInvitation
     }
 
     /// A short window (closed iPhone Duo or any iPhone in landscape) moves the title into the
@@ -62,11 +67,13 @@ struct OnboardingServersListView: View {
 
     init(
         prefillURL: URL? = nil,
+        prefillTailcatPairing: TailcatPairingLink? = nil,
         shouldDismissOnSuccess: Bool = false,
         onboardingStyle: OnboardingStyle,
         presenter: OnboardingAuthPresenter
     ) {
         self.prefillURL = prefillURL
+        self.prefillTailcatPairing = prefillTailcatPairing
         self
             ._viewModel =
             .init(wrappedValue: OnboardingServersListViewModel(shouldDismissOnSuccess: shouldDismissOnSuccess))
@@ -286,7 +293,7 @@ struct OnboardingServersListView: View {
             }
         }
         ToolbarItem(placement: .topBarTrailing) {
-            if prefillURL != nil {
+            if prefillURL != nil || prefillTailcatPairing != nil {
                 CloseButton {
                     dismiss()
                 }
@@ -317,7 +324,23 @@ struct OnboardingServersListView: View {
 
     private var content: some View {
         Group {
-            if shouldShowInvitation, let invitationURL {
+            if shouldShowInvitation, let tailcatInvitation {
+                // A pairing link reaches the server from anywhere, so it wins over a plain invitation.
+                InvitationView(
+                    tailcatServerName: tailcatInvitation.name ?? ServerInfo.defaultName,
+                    isAccepting: viewModel.invitationLoading,
+                    onAccept: {
+                        acceptTailcatInvitation(tailcatInvitation)
+                    },
+                    onReject: {
+                        rejectInvitation()
+                    }
+                )
+                .onAppear {
+                    cancelAutoConnect()
+                    hideCenterLoader()
+                }
+            } else if shouldShowInvitation, let invitationURL {
                 InvitationView(
                     invitationURL: invitationURL,
                     isAccepting: viewModel.invitationLoading,
@@ -389,6 +412,11 @@ struct OnboardingServersListView: View {
         viewModel.selectInstance(.init(manualURL: url), presenter: presenter)
     }
 
+    private func acceptTailcatInvitation(_ link: TailcatPairingLink) {
+        viewModel.invitationLoading = true
+        viewModel.selectTailcatPairing(link, presenter: presenter)
+    }
+
     private func rejectInvitation() {
         if onboardingStyle == .secondary {
             dismiss()
@@ -396,6 +424,7 @@ struct OnboardingServersListView: View {
         }
         rejectedInvitation = true
         Current.appSessionValues.inviteURL = nil
+        Current.appSessionValues.inviteTailcatPairing = nil
         viewModel.showCenterLoader = true
         viewModel.startDiscovery()
     }
