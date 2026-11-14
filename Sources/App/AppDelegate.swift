@@ -73,6 +73,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         setDefaults()
 
+        // Before anything evaluates a server's active URL: only this process can run Tailcat tunnels.
+        TailcatTunnelManager.shared.install()
+
         // swiftlint:disable prohibit_environment_assignment
         Current.backgroundTask = ApplicationBackgroundTaskRunner()
 
