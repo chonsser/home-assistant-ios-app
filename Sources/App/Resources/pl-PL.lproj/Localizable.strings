@@ -1380,7 +1380,7 @@ Currently mTLS is only supported on iOS 17+, it may present issues related to di
 "onboarding.invitation.screen_title" = "Otrzymano zaproszenie";
 "onboarding.invitation.security_warning" = "Only accept this invite if you trust the person who shared it. Connecting to an unknown server could give it access to data you enter or is sent by the app, such as your location and device information.";
 "onboarding.invitation.tailcat.address_title" = "Home Assistant";
-"onboarding.invitation.tailcat.description" = "To parowanie łączy aplikację z Twoim Home Assistantem przez szyfrowany end-to-end tunel Tailcat, dzięki czemu działa także poza domem.";
+"onboarding.invitation.tailcat.description" = "To parowanie łączy aplikację z Twoim Home Assistantem przez tunel Tailcat szyfrowany end-to-end, dzięki czemu działa także poza domem.";
 "onboarding.invitation.title" = "Zaproszenie Home Assistant";
 "onboarding.local_access.description" = "If this app knows when you’re away from home, it can choose a more secure way to connect to your Home Assistant system. This requires location services to be enabled.";
 "onboarding.local_access.less_secure_option.title" = "Less secure: Do not allow this app to know when you're home";
@@ -1743,7 +1743,7 @@ Home Assistant is open source, advocates for privacy and runs locally in your ho
 "settings.connection_section.shared_instance_id_warning" = "Two servers share the same ID";
 "settings.connection_section.sync_server" = "Sync";
 "settings.connection_section.tailcat.active_url.title" = "Aktywne połączenie";
-"settings.connection_section.tailcat.footer" = "Połącz się z tym serwerem spoza domu przez szyfrowany end-to-end tunel Tailcat, bez subskrypcji chmury i przekierowywania portów. Utwórz w Home Assistant kod parowania dla tego urządzenia, a następnie zeskanuj go lub wklej tutaj.";
+"settings.connection_section.tailcat.footer" = "Połącz się z tym serwerem spoza domu przez tunel Tailcat szyfrowany end-to-end, bez subskrypcji chmury i przekierowywania portów. Utwórz w Home Assistant kod parowania dla tego urządzenia, a następnie zeskanuj go lub wklej tutaj.";
 "settings.connection_section.tailcat.pair.button" = "Sparuj";
 "settings.connection_section.tailcat.pair.header" = "Parowanie";
 "settings.connection_section.tailcat.pair.link_placeholder" = "Link parowania";
