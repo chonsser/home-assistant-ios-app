@@ -76,7 +76,7 @@ final class ConnectionURLViewModel: ObservableObject {
             return L10n.Settings.ConnectionSection.InternalBaseUrl.placeholder
         case .external:
             return L10n.Settings.ConnectionSection.ExternalBaseUrl.placeholder
-        case .remoteUI, .none:
+        case .remoteUI, .none, .tailcat:
             return ""
         }
     }

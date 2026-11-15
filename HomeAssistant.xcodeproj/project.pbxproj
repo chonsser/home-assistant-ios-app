@@ -22,6 +22,8 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		7A1C0A700000000000000006 /* TailcatPairingE2ETests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1C0A700000000000000005 /* TailcatPairingE2ETests.swift */; };
+		7A1C0A700000000000000002 /* Tailcat.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A1C0A700000000000000001 /* Tailcat.xcframework */; };
 		09C9974C22F113423EE3B3DC /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = B19185B1C20DABFD5B0D1B5D /* GRDB */; };
 		1104FCCF253275CF00B8BE34 /* WatchBackgroundRefreshScheduler.test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1104FCCE253275CF00B8BE34 /* WatchBackgroundRefreshScheduler.test.swift */; };
 		110AA57B25B38C02005061A0 /* ServerAlerter.test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110AA57A25B38C02005061A0 /* ServerAlerter.test.swift */; };
@@ -590,6 +592,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7A1C0A700000000000000005 /* TailcatPairingE2ETests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TailcatPairingE2ETests.swift; sourceTree = "<group>"; };
+		7A1C0A700000000000000001 /* Tailcat.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = Tailcat.xcframework; path = Sources/Tailcat/Frameworks/Tailcat.xcframework; sourceTree = SOURCE_ROOT; };
 		1104FCCE253275CF00B8BE34 /* WatchBackgroundRefreshScheduler.test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBackgroundRefreshScheduler.test.swift; sourceTree = "<group>"; };
 		110AA57A25B38C02005061A0 /* ServerAlerter.test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerAlerter.test.swift; sourceTree = "<group>"; };
 		1112EA92271B78690038BBFC /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk/System/Library/Frameworks/UserNotifications.framework; sourceTree = DEVELOPER_DIR; };
@@ -2605,6 +2609,8 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		7A1C0A700000000000000003 /* Tailcat */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Tailcat; sourceTree = "<group>"; };
+		7A1C0A700000000000000004 /* Tailcat */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Tailcat; sourceTree = "<group>"; };
 		11AF1EC52528FB2300AAE364 /* Entitlements */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Entitlements; sourceTree = "<group>"; };
 		11B38EE0275C545C00205C7B /* Intents */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Intents; sourceTree = "<group>"; };
 		11F2F28D2587285300F61F7C /* NotificationAttachment */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = NotificationAttachment; sourceTree = "<group>"; };
@@ -2840,6 +2846,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7A1C0A700000000000000002 /* Tailcat.xcframework in Frameworks */,
 				42886D2C2FFE8815004EB33B /* HAKit in Frameworks */,
 				50099BBED6A1441E8A6B6C5C /* SFSafeSymbols in Frameworks */,
 				CEA1C4A10000000000000011 /* KeychainAccess in Frameworks */,
@@ -3012,6 +3019,7 @@
 		29278BB24639BA945D3D86B4 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7A1C0A700000000000000001 /* Tailcat.xcframework */,
 				4697F4BE2D8A3F7500C5C467 /* XCTest.framework */,
 				46C62BA82D8A3AC5002C0001 /* SwiftUI.framework */,
 				425573E42B58380D00145217 /* CarPlay.framework */,
@@ -3037,6 +3045,7 @@
 		42EDE945300315A50051FC9B /* App */ = {
 			isa = PBXGroup;
 			children = (
+				7A1C0A700000000000000003 /* Tailcat */,
 				42E2E0000000000000000006 /* Accessibility */,
 				42EDE685300315A50051FC9B /* Assist */,
 				42EDE68E300315A50051FC9B /* BarcodeScanner */,
@@ -3125,6 +3134,7 @@
 		B657A8FF1CA646EB00121384 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				7A1C0A700000000000000004 /* Tailcat */,
 				42EDBB773002FBBE0051FC9B /* Kiosk */,
 				42EDBB663002FBBE0051FC9B /* EntityPicker */,
 				42B89EAB2E080494000224A2 /* AppConstants.test.swift */,
@@ -3173,6 +3183,7 @@
 				42E2E0000000000000000010 /* MTLSOnboardingE2ETests.swift */,
 				42E2E000000000000000000E /* RestoredDeviceFlowsRecordingTests.swift */,
 				42E2E000000000000000000A /* E2EFlow.swift */,
+				7A1C0A700000000000000005 /* TailcatPairingE2ETests.swift */,
 				42EDBC3A3002FBD90051FC9B /* Resources */,
 				B699339B1E2338960054453D /* SnapshotHelper.swift */,
 				119DC15724B6A33E00AAB204 /* ZeroLatitude.gpx */,
@@ -3616,6 +3627,7 @@
 			fileSystemSynchronizedGroups = (
 				4283E0D53004DCF4004D1061 /* Resources */,
 				42DF4EE5302CACB600589E49 /* FlightGreetings */,
+				7A1C0A700000000000000003 /* Tailcat */,
 				42DF4EF6302CACC200589E49 /* Templating */,
 				42DF4F03302CACD000589E49 /* ServerSwitching */,
 				42E2E0000000000000000006 /* Accessibility */,
@@ -3679,6 +3691,7 @@
 				42196AD92DA5AF7A00BD501E /* Onboarding */,
 				428626002DA5CC8400D58D13 /* DesignSystem */,
 				42B980DA2DC2567F00BC5C08 /* Settings */,
+				7A1C0A700000000000000004 /* Tailcat */,
 				42CE0001300000000051FC9B /* Container */,
 				42CE0002300000000051FC9B /* Cameras */,
 				42D3E49F2C5BCCF600444BE6 /* Watch */,
@@ -4656,6 +4669,7 @@
 				42E2E0000000000000000011 /* MTLSOnboardingE2ETests.swift in Sources */,
 				42E2E000000000000000000F /* RestoredDeviceFlowsRecordingTests.swift in Sources */,
 				42E2E000000000000000000B /* E2EFlow.swift in Sources */,
+				7A1C0A700000000000000006 /* TailcatPairingE2ETests.swift in Sources */,
 				B657A90C1CA646EB00121384 /* HomeAssistantUITests.swift in Sources */,
 				B699339C1E2338960054453D /* SnapshotHelper.swift in Sources */,
 			);

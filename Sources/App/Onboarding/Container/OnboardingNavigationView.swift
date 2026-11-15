@@ -34,17 +34,20 @@ struct OnboardingNavigationView: View {
 
     public let onboardingStyle: OnboardingStyle
     private let prefillURL: URL?
+    private let prefillTailcatPairing: TailcatPairingLink?
     private let shouldDismissOnSuccess: Bool
 
     init(
         onboardingStyle: OnboardingStyle,
         prefillURL: URL? = nil,
+        prefillTailcatPairing: TailcatPairingLink? = nil,
         shouldDismissOnSuccess: Bool = false,
         presenter: @autoclosure @escaping () -> OnboardingAuthPresenter = OnboardingAuthPresenter()
     ) {
         self._presenter = StateObject(wrappedValue: presenter())
         self.onboardingStyle = onboardingStyle
         self.prefillURL = prefillURL
+        self.prefillTailcatPairing = prefillTailcatPairing
         self.shouldDismissOnSuccess = shouldDismissOnSuccess
     }
 
@@ -138,6 +141,7 @@ struct OnboardingNavigationView: View {
     private var serversList: some View {
         OnboardingServersListView(
             prefillURL: prefillURL,
+            prefillTailcatPairing: prefillTailcatPairing,
             shouldDismissOnSuccess: shouldDismissOnSuccess,
             onboardingStyle: onboardingStyle,
             presenter: presenter

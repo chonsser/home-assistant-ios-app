@@ -24,6 +24,17 @@ public struct ConnectionInfo: Codable, Equatable {
     public var connectionAccessSecurityLevel: ConnectionSecurityLevel = .undefined
     /// Client certificate for mTLS authentication (optional, iOS only)
     public var clientCertificate: ClientCertificate?
+    /// Remote access through a Tailcat tunnel. Holds secrets, so it is stored with the rest of the
+    /// server info in the Keychain and stripped from the GRDB mirror. The tunnel only runs in the app
+    /// process: elsewhere `tailcatURL` is `nil` and `.tailcat` is never chosen.
+    public var tailcat: TailcatConfiguration? {
+        didSet {
+            if tailcat == nil, overrideActiveURLType == .tailcat {
+                overrideActiveURLType = nil
+            }
+        }
+    }
+
     public var internalSSIDs: [String]? {
         didSet {
             overrideActiveURLType = nil
@@ -41,7 +52,13 @@ public struct ConnectionInfo: Codable, Equatable {
     }
 
     public var hasRemoteConnectionSetup: Bool {
-        externalURL != nil || remoteUIURL != nil
+        externalURL != nil || remoteUIURL != nil || tailcat != nil
+    }
+
+    /// The loopback URL of this server's Tailcat tunnel in this process, `nil` when no tunnel is
+    /// configured or this process cannot run one (extensions, the watch).
+    public var tailcatURL: URL? {
+        tailcat.flatMap { HANetworkingEnvironment.current.tailcatLocalURL($0) }
     }
 
     public var configuredURLs: [URL] {
@@ -50,8 +67,11 @@ public struct ConnectionInfo: Codable, Equatable {
 
     /// Every `host:port` this server is configured at, the scheme left out: a server reached over
     /// `https` where another description of it has `http` is still the same server.
+    ///
+    /// The Tailcat tunnel counts through its loopback address, which is derived from the tunnel
+    /// endpoint, so a server onboarded through the same tunnel is recognized as the same server.
     public var hostAndPortIdentities: Set<String> {
-        URL.hostAndPortIdentities(of: [internalURL, externalURL])
+        URL.hostAndPortIdentities(of: [internalURL, externalURL, tailcatURL])
     }
 
     public var hasNonHTTPSURLOptions: Bool {
@@ -59,9 +79,12 @@ public struct ConnectionInfo: Codable, Equatable {
     }
 
     /// `true` when at least one configured URL uses HTTPS, meaning the active URL
-    /// always has a secure option to fall back on regardless of local network configuration
+    /// always has a secure option to fall back on regardless of local network configuration.
+    ///
+    /// A Tailcat tunnel counts as such an option: its loopback URL is plain `http`, but the traffic
+    /// leaves the device WireGuard-encrypted end to end, so it is as safe away from home as HTTPS.
     public var hasHTTPSURLOption: Bool {
-        configuredURLs.contains { $0.scheme?.lowercased() == "https" }
+        tailcat != nil || configuredURLs.contains { $0.scheme?.lowercased() == "https" }
     }
 
     public var overrideActiveURLType: URLType?
@@ -120,7 +143,8 @@ public struct ConnectionInfo: Codable, Equatable {
         isLocalPushEnabled: Bool,
         securityExceptions: SecurityExceptions,
         connectionAccessSecurityLevel: ConnectionSecurityLevel,
-        clientCertificate: ClientCertificate? = nil
+        clientCertificate: ClientCertificate? = nil,
+        tailcat: TailcatConfiguration? = nil
     ) {
         self.externalURL = externalURL
         self.internalURL = internalURL
@@ -134,6 +158,7 @@ public struct ConnectionInfo: Codable, Equatable {
         self.securityExceptions = securityExceptions
         self.connectionAccessSecurityLevel = connectionAccessSecurityLevel
         self.clientCertificate = clientCertificate
+        self.tailcat = tailcat
     }
 
     public init(from decoder: Decoder) throws {
@@ -161,6 +186,8 @@ public struct ConnectionInfo: Codable, Equatable {
             ClientCertificate.self,
             forKey: .clientCertificate
         )
+        // `try?` so a malformed tunnel configuration costs the tunnel, not the whole server.
+        self.tailcat = try? container.decodeIfPresent(TailcatConfiguration.self, forKey: .tailcat)
     }
 
     // Localized `description` (CustomStringConvertible) is added retroactively in the Shared module
@@ -170,6 +197,8 @@ public struct ConnectionInfo: Codable, Equatable {
         case remoteUI
         case external
         case none
+        /// The loopback URL of a Tailcat tunnel. Appended last so persisted raw values keep their meaning.
+        case tailcat
 
         public var debugDescription: String {
             switch self {
@@ -181,27 +210,29 @@ public struct ConnectionInfo: Codable, Equatable {
                 return "External URL"
             case .none:
                 return "No URL (Active URL nil)"
+            case .tailcat:
+                return "Tailcat tunnel"
             }
         }
 
         public var isAffectedBySSID: Bool {
             switch self {
             case .internal: return true
-            case .remoteUI, .external, .none: return false
+            case .remoteUI, .external, .none, .tailcat: return false
             }
         }
 
         public var isAffectedByCloud: Bool {
             switch self {
             case .internal: return false
-            case .remoteUI, .external, .none: return true
+            case .remoteUI, .external, .none, .tailcat: return true
             }
         }
 
         public var isAffectedByHardwareAddress: Bool {
             switch self {
             case .internal: return HANetworkingEnvironment.current.isCatalyst
-            case .remoteUI, .external, .none: return false
+            case .remoteUI, .external, .none, .tailcat: return false
             }
         }
 
@@ -247,6 +278,9 @@ public struct ConnectionInfo: Codable, Equatable {
             case .none:
                 activeURLType = .none
                 overrideURL = nil
+            case .tailcat:
+                activeURLType = .tailcat
+                overrideURL = tailcatURL
             }
 
             if let overrideURL {
@@ -268,6 +302,10 @@ public struct ConnectionInfo: Codable, Equatable {
             // Custom remote connection
             activeURLType = .external
             url = externalURL
+        } else if let tailcatURL {
+            // Tailcat tunnel, only resolvable in the app process
+            activeURLType = .tailcat
+            url = tailcatURL
         } else if let internalURL, [.lessSecure, .undefined].contains(connectionAccessSecurityLevel) {
             // Falback to internal URL if no other URL is set
             // In case user opted to not check for home network or haven't made a decision yet
@@ -288,7 +326,7 @@ public struct ConnectionInfo: Codable, Equatable {
 
     /// Returns the url that should be used at this moment to share with someone else to access the Home Assistant
     /// instance.
-    /// Cloud > Remote > Internal
+    /// Cloud > Remote > Internal. The Tailcat loopback URL is never offered: it only works on this device.
     public func invitationURL() -> URL? {
         if useCloud, let remoteUIURL {
             return remoteUIURL.sanitized()
@@ -345,12 +383,13 @@ public struct ConnectionInfo: Codable, Equatable {
         case .internal: return internalURL
         case .external: return externalURL
         case .remoteUI: return remoteUIURL
+        case .tailcat: return tailcatURL
         case .none: return nil
         }
     }
 
     /// URL types that can be used to authenticate against this server, ordered by preference:
-    /// remote UI > external > internal.
+    /// remote UI > external > tailcat > internal. Tailcat only appears where the tunnel can run.
     ///
     /// Remote UI is dropped when the user opted out of Home Assistant Link (`useCloud`): a server can
     /// keep a remote UI URL around while the user connects through their own external URL, and
@@ -359,7 +398,7 @@ public struct ConnectionInfo: Codable, Equatable {
     /// the only configured URL it is returned regardless of `useCloud`, since an empty list would leave
     /// no way to authenticate at all.
     public var availableAuthenticationURLTypes: [URLType] {
-        let configured: [URLType] = [.remoteUI, .external, .internal].filter { address(for: $0) != nil }
+        let configured: [URLType] = [.remoteUI, .external, .tailcat, .internal].filter { address(for: $0) != nil }
         let respectingCloudPreference = configured.filter { $0 != .remoteUI || useCloud }
         return respectingCloudPreference.isEmpty ? configured : respectingCloudPreference
     }
@@ -380,7 +419,8 @@ public struct ConnectionInfo: Codable, Equatable {
             externalURL = address
         case .remoteUI:
             remoteUIURL = address
-        case .none:
+        case .none, .tailcat:
+            // The tunnel's loopback URL is derived from `tailcat`, never stored.
             break
         }
     }

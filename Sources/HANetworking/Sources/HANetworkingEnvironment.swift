@@ -64,6 +64,13 @@ public struct HANetworkingEnvironment {
     public var handleReauthenticationRequired: (_ server: Server, _ statusCode: Int, _ errorDescription: String)
         -> Void = { _, _, _ in }
 
+    /// Resolves the loopback URL (`http://127.0.0.1:<port>`) through which a Tailcat tunnel reaches
+    /// the server, or `nil` when this process has no tunnel engine. Only the app target links the
+    /// tunnel (its Go runtime is too heavy for extensions and the watch); it installs this hook at
+    /// launch. The default returns `nil`, so `ConnectionInfo` skips `.tailcat` everywhere else.
+    /// Must return synchronously: `evaluateActiveURL()` calls it.
+    public var tailcatLocalURL: (TailcatConfiguration) -> URL? = { _ in nil }
+
     public init() {}
 
     public struct Connectivity {

@@ -2453,6 +2453,8 @@ public enum L10n {
         public static func remoteUiLink(_ p1: Any) -> String {
           return L10n.tr("Localizable", "connection.active_url_type.toast.remote_ui_link", String(describing: p1))
         }
+        /// Using the Tailcat tunnel.
+        public static var tailcat: String { return L10n.tr("Localizable", "connection.active_url_type.toast.tailcat") }
         /// Connection type
         public static var title: String { return L10n.tr("Localizable", "connection.active_url_type.toast.title") }
       }
@@ -4684,6 +4686,12 @@ public enum L10n {
       public static var securityWarning: String { return L10n.tr("Localizable", "onboarding.invitation.security_warning") }
       /// Home Assistant Invite
       public static var title: String { return L10n.tr("Localizable", "onboarding.invitation.title") }
+      public enum Tailcat {
+        /// Home Assistant
+        public static var addressTitle: String { return L10n.tr("Localizable", "onboarding.invitation.tailcat.address_title") }
+        /// This pairing connects the app to your Home Assistant through an end-to-end encrypted Tailcat tunnel, so it also works away from home.
+        public static var description: String { return L10n.tr("Localizable", "onboarding.invitation.tailcat.description") }
+      }
     }
     public enum LocalAccess {
       /// If this app knows when you’re away from home, it can choose a more secure way to connect to your Home Assistant system. This requires location services to be enabled.
@@ -5769,6 +5777,54 @@ public enum L10n {
           /// None
           public static var `none`: String { return L10n.tr("Localizable", "settings.connection_section.sensor_send_type.setting.none") }
         }
+      }
+      public enum Tailcat {
+        /// Reach this server away from home through an end-to-end encrypted Tailcat tunnel, without a cloud subscription or port forwarding. Create a pairing code for this device in Home Assistant, then scan or paste it here.
+        public static var footer: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.footer") }
+        /// Tailcat Remote Access
+        public static var title: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.title") }
+        public enum ActiveUrl {
+          /// Active Connection
+          public static var title: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.active_url.title") }
+        }
+        public enum Pair {
+          /// Pair
+          public static var button: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.pair.button") }
+          /// Pair
+          public static var header: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.pair.header") }
+          /// Pairing link
+          public static var linkPlaceholder: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.pair.link_placeholder") }
+          /// Pairing again replaces the current pairing.
+          public static var repairFooter: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.pair.repair_footer") }
+          /// Scan Pairing QR Code
+          public static var scan: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.pair.scan") }
+          /// Paired. This server can now be reached through Tailcat.
+          public static var success: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.pair.success") }
+        }
+        public enum Remove {
+          /// This device will no longer reach the server through Tailcat. You can pair again later with a new pairing code.
+          public static var message: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.remove.message") }
+          /// Remove Pairing
+          public static var title: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.remove.title") }
+        }
+        public enum Scanner {
+          /// Scan the Tailcat pairing QR code shown in Home Assistant.
+          public static var title: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.scanner.title") }
+          /// The camera cannot be used. Paste the pairing link instead.
+          public static var unavailable: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.scanner.unavailable") }
+        }
+        public enum Status {
+          /// Not paired
+          public static var notPaired: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.status.not_paired") }
+          /// Paired
+          public static var paired: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.status.paired") }
+          /// Status
+          public static var title: String { return L10n.tr("Localizable", "settings.connection_section.tailcat.status.title") }
+        }
+      }
+      public enum TailcatUrl {
+        /// Tailcat Tunnel
+        public static var title: String { return L10n.tr("Localizable", "settings.connection_section.tailcat_url.title") }
       }
       public enum UpdateDatabase {
         /// Server information updated
@@ -8320,6 +8376,25 @@ public enum L10n {
     }
   }
 
+  public enum Tailcat {
+    public enum Pairing {
+      public enum Error {
+        /// The pairing link does not contain a valid Tailcat address.
+        public static var invalidAddress: String { return L10n.tr("Localizable", "tailcat.pairing.error.invalid_address") }
+        /// The pairing link does not contain a valid Tailcat client key.
+        public static var invalidKey: String { return L10n.tr("Localizable", "tailcat.pairing.error.invalid_key") }
+        /// This is not a Home Assistant Tailcat pairing link.
+        public static var invalidLink: String { return L10n.tr("Localizable", "tailcat.pairing.error.invalid_link") }
+        /// The pairing link does not contain a valid port (1–65535).
+        public static var invalidPort: String { return L10n.tr("Localizable", "tailcat.pairing.error.invalid_port") }
+        /// Invalid Pairing Link
+        public static var title: String { return L10n.tr("Localizable", "tailcat.pairing.error.title") }
+        /// The Tailcat tunnel could not be started on this device.
+        public static var tunnelUnavailable: String { return L10n.tr("Localizable", "tailcat.pairing.error.tunnel_unavailable") }
+      }
+    }
+  }
+
   public enum TestFlightCommunication {
     /// Beta Tester Update
     public static var badgeTitle: String { return L10n.tr("Localizable", "test_flight_communication.badge_title") }
@@ -8522,6 +8597,28 @@ public enum L10n {
         public static var message: String { return L10n.tr("Localizable", "url_handler.send_location.success.message") }
         /// Sent location
         public static var title: String { return L10n.tr("Localizable", "url_handler.send_location.success.title") }
+      }
+    }
+    public enum Tailcat {
+      public enum Attached {
+        /// %@ can now be reached through Tailcat.
+        public static func message(_ p1: Any) -> String {
+          return L10n.tr("Localizable", "url_handler.tailcat.attached.message", String(describing: p1))
+        }
+      }
+      public enum Choose {
+        /// Use for %@
+        public static func attach(_ p1: Any) -> String {
+          return L10n.tr("Localizable", "url_handler.tailcat.choose.attach", String(describing: p1))
+        }
+        /// Add %@ as a new server, or use this pairing to reach a server you already have?
+        public static func message(_ p1: Any) -> String {
+          return L10n.tr("Localizable", "url_handler.tailcat.choose.message", String(describing: p1))
+        }
+        /// Add as New Server
+        public static var newServer: String { return L10n.tr("Localizable", "url_handler.tailcat.choose.new_server") }
+        /// Tailcat Pairing
+        public static var title: String { return L10n.tr("Localizable", "url_handler.tailcat.choose.title") }
       }
     }
     public enum XCallbackUrl {

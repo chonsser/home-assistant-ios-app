@@ -67,6 +67,9 @@ protocol AppCoordinator: AnyObject {
     /// something to zoom out of; everywhere else the sheet slides up as usual.
     func selectServer(prompt: ServerSelectPrompt?, zoomsFromStandBy: Bool, completion: @escaping (Server) -> Void)
     func presentInvitation(url: URL?)
+    /// Handles a validated Tailcat pairing link: onboards a new server through the tunnel, or attaches
+    /// the pairing to a server the app already has, as the user chooses.
+    func presentTailcatPairing(_ link: TailcatPairingLink)
     func setup()
     func open(
         from: OpenSource,

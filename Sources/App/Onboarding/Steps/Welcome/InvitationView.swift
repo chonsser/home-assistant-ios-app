@@ -8,10 +8,34 @@ struct InvitationView: View {
         static let logoHeight: CGFloat = 110
     }
 
-    let invitationURL: URL
+    /// The server address of an invitation link.
+    let invitationURL: URL?
+    /// The server name of a Tailcat pairing link, whose address is a secret and is not shown.
+    let tailcatServerName: String?
     let isAccepting: Bool
     let onAccept: () -> Void
     let onReject: () -> Void
+
+    init(invitationURL: URL, isAccepting: Bool, onAccept: @escaping () -> Void, onReject: @escaping () -> Void) {
+        self.invitationURL = invitationURL
+        self.tailcatServerName = nil
+        self.isAccepting = isAccepting
+        self.onAccept = onAccept
+        self.onReject = onReject
+    }
+
+    init(
+        tailcatServerName: String,
+        isAccepting: Bool,
+        onAccept: @escaping () -> Void,
+        onReject: @escaping () -> Void
+    ) {
+        self.invitationURL = nil
+        self.tailcatServerName = tailcatServerName
+        self.isAccepting = isAccepting
+        self.onAccept = onAccept
+        self.onReject = onReject
+    }
 
     var body: some View {
         ScrollView {
@@ -52,29 +76,49 @@ struct InvitationView: View {
 
     private var textBlock: some View {
         VStack(alignment: .center, spacing: DesignSystem.Spaces.three) {
-            Text(L10n.Onboarding.Invitation.description)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
+            Text(
+                tailcatServerName == nil
+                    ? L10n.Onboarding.Invitation.description
+                    : L10n.Onboarding.Invitation.Tailcat.description
+            )
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.center)
 
             ZStack(alignment: .topTrailing) {
                 VStack {
                     VStack(alignment: .leading) {
-                        Text(L10n.Onboarding.Invitation.addressTitle)
-                            .foregroundStyle(.secondary)
-                            .font(DesignSystem.Font.caption)
-                        Link(destination: invitationURL) {
-                            Text(invitationURL.absoluteString)
+                        Text(
+                            tailcatServerName == nil
+                                ? L10n.Onboarding.Invitation.addressTitle
+                                : L10n.Onboarding.Invitation.Tailcat.addressTitle
+                        )
+                        .foregroundStyle(.secondary)
+                        .font(DesignSystem.Font.caption)
+                        if let invitationURL {
+                            Link(destination: invitationURL) {
+                                Text(invitationURL.absoluteString)
+                                    .lineLimit(1)
+                                    .truncationMode(.middle)
+                                    .privacySensitive()
+                                    .screenCaptureProtected()
+                                    .font(DesignSystem.Font.subheadline)
+                                    .padding(.horizontal, DesignSystem.Spaces.two)
+                                    .padding(.vertical, DesignSystem.Spaces.half)
+                                    .background(Color(uiColor: .secondarySystemBackground))
+                                    .clipShape(.capsule)
+                            }
+                            .padding(.trailing, DesignSystem.Spaces.four)
+                        } else if let tailcatServerName {
+                            Text(tailcatServerName)
                                 .lineLimit(1)
                                 .truncationMode(.middle)
-                                .privacySensitive()
-                                .screenCaptureProtected()
                                 .font(DesignSystem.Font.subheadline)
                                 .padding(.horizontal, DesignSystem.Spaces.two)
                                 .padding(.vertical, DesignSystem.Spaces.half)
                                 .background(Color(uiColor: .secondarySystemBackground))
                                 .clipShape(.capsule)
+                                .padding(.trailing, DesignSystem.Spaces.four)
                         }
-                        .padding(.trailing, DesignSystem.Spaces.four)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     Label(
@@ -99,7 +143,7 @@ struct InvitationView: View {
                             )
                         )
                 }
-                Image(systemSymbol: .envelopeBadgeFill)
+                Image(systemSymbol: tailcatServerName == nil ? .envelopeBadgeFill : .lockShieldFill)
                     .foregroundStyle(.accent)
                     .padding(DesignSystem.Spaces.two)
             }
@@ -119,6 +163,7 @@ struct InvitationView: View {
             }
             .buttonStyle(.primaryButton)
             .disabled(isAccepting)
+            .accessibilityIdentifier(AccessibilityIdentifier.onboardingInvitationAccept.rawValue)
             Button(L10n.Onboarding.Invitation.rejectButton, action: onReject)
                 .tint(Color.haPrimary)
                 .buttonStyle(.secondaryButton)
@@ -133,6 +178,18 @@ struct InvitationView: View {
     NavigationView {
         InvitationView(
             invitationURL: URL(string: "http://192.168.0.188:8123")!,
+            isAccepting: false,
+            onAccept: {},
+            onReject: {}
+        )
+    }
+    .navigationViewStyle(.stack)
+}
+
+#Preview("Tailcat") {
+    NavigationView {
+        InvitationView(
+            tailcatServerName: "Home",
             isAccepting: false,
             onAccept: {},
             onReject: {}

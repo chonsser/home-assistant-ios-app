@@ -20,8 +20,13 @@ struct OnboardingAuthStepConfig: OnboardingAuthPostStep {
     /// the home network isn't known this early, and a cloudhook Home Assistant Link rejects would
     /// fail onboarding for a server that is reachable. `OnboardingAuth.connect` tries the internal
     /// URL first and drops it when falling back to the external one, so internal-then-external is
-    /// the URL it connected through.
+    /// the URL it connected through. A server onboarded through a Tailcat pairing has neither, and
+    /// was reached through its tunnel.
     static func signedInURL(of connection: ConnectionInfo) -> URL? {
-        (connection.address(for: .internal) ?? connection.address(for: .external))?.sanitized()
+        (
+            connection.address(for: .internal)
+                ?? connection.address(for: .external)
+                ?? connection.address(for: .tailcat)
+        )?.sanitized()
     }
 }

@@ -10,6 +10,7 @@ enum WebhookEndpointSource: Hashable {
     case internalURL
     case remoteUI
     case externalURL
+    case tailcat
 
     var title: String {
         switch self {
@@ -21,6 +22,8 @@ enum WebhookEndpointSource: Hashable {
             return L10n.Settings.ConnectionSection.RemoteUiUrl.title
         case .externalURL:
             return L10n.Settings.ConnectionSection.ExternalBaseUrl.title
+        case .tailcat:
+            return L10n.Settings.ConnectionSection.TailcatUrl.title
         }
     }
 }

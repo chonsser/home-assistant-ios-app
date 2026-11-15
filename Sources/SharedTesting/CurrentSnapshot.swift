@@ -71,7 +71,11 @@ public struct CurrentSnapshot {
     /// later tests would open on that invitation.
     private static func sessionValues(of environment: AppEnvironment) -> [() -> Void] {
         let inviteURL = environment.appSessionValues.inviteURL
-        return [{ environment.appSessionValues.inviteURL = inviteURL }]
+        let inviteTailcatPairing = environment.appSessionValues.inviteTailcatPairing
+        return [{
+            environment.appSessionValues.inviteURL = inviteURL
+            environment.appSessionValues.inviteTailcatPairing = inviteTailcatPairing
+        }]
     }
 
     /// Puts every captured member back.

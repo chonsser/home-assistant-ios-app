@@ -90,6 +90,11 @@ class OnboardingAuth {
                 var serverInfo = api.server.info
                 var registration = settings.registrationRecord(for: api.server.identifier)
                 if let existing, let existingInfo {
+                    // Signing in again over the home network or the web must not cost the server
+                    // the Tailcat pairing it already has.
+                    if serverInfo.connection.tailcat == nil {
+                        serverInfo.connection.tailcat = existingInfo.connection.tailcat
+                    }
                     serverInfo.setSetting(value: existingInfo.setting(for: .sensorPrivacy), for: .sensorPrivacy)
                     serverInfo.setSetting(value: existingInfo.setting(for: .locationPrivacy), for: .locationPrivacy)
 
@@ -485,6 +490,15 @@ private extension ConnectionInfo {
 
         // default cloud to on
         useCloud = true
+
+        if let tailcat = discovered.tailcat {
+            // Onboarding signed in through the tunnel's loopback URL. That URL is only meaningful in
+            // this process and is derived from the tunnel configuration, so keep the configuration
+            // and never store the loopback URL as the server's internal or external URL.
+            self.tailcat = tailcat
+            set(address: nil, for: .internal)
+            set(address: nil, for: .external)
+        }
 
         if discovered.internalURL != nil, discovered.externalURL != nil {
             overrideActiveURLType = .internal

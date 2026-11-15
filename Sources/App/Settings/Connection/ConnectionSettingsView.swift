@@ -32,6 +32,7 @@ struct ConnectionSettingsView: View {
         List {
             detailsSection
             clientCertificateSection
+            tailcatSection
             privacySection
             statusSection
             reauthenticateSection
@@ -238,6 +239,25 @@ struct ConnectionSettingsView: View {
                     valueColor: .secondary
                 )
             }
+        }
+    }
+
+    // MARK: - Tailcat Section
+
+    private var tailcatSection: some View {
+        Section {
+            NavigationLink {
+                TailcatSettingsView(viewModel: TailcatSettingsViewModel(server: viewModel.server))
+            } label: {
+                NavigationRow(
+                    title: L10n.Settings.ConnectionSection.Tailcat.title,
+                    value: viewModel.server.info.connection.tailcat == nil
+                        ? L10n.Settings.ConnectionSection.Tailcat.Status.notPaired
+                        : L10n.Settings.ConnectionSection.Tailcat.Status.paired,
+                    valueColor: .secondary
+                )
+            }
+            .accessibilityIdentifier(AccessibilityIdentifier.connectionSettingsTailcat.rawValue)
         }
     }
 
@@ -449,6 +469,7 @@ extension ConnectionSettingsView: SettingsScreenSearchable {
             SettingsSearchEntry(L10n.Settings.ConnectionSection.ConnectionAccessSecurityLevel.title),
             SettingsSearchEntry(L10n.Settings.ConnectionSection.syncServer),
             SettingsSearchEntry(L10n.Settings.ConnectionSection.ClientCertificate.header),
+            SettingsSearchEntry(L10n.Settings.ConnectionSection.Tailcat.title),
             SettingsSearchEntry(L10n.Settings.ConnectionSection.LocationSendType.title),
             SettingsSearchEntry(L10n.Settings.ConnectionSection.SensorSendType.title),
             SettingsSearchEntry(L10n.Settings.ConnectionSection.Websocket.title),

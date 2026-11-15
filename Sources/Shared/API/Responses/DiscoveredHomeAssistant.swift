@@ -20,6 +20,10 @@ public struct DiscoveredHomeAssistant: ImmutableMappable, Equatable {
     public var internalURL: URL?
     public var locationName: String
     public var bonjourName: String?
+    /// Set when this instance is reached through a Tailcat tunnel. The URLs above are then the
+    /// tunnel's loopback URL, which only stands in during onboarding: the onboarded server keeps the
+    /// tunnel configuration instead of storing the loopback URL as one of its own.
+    public var tailcat: TailcatConfiguration?
 
     public init(manualURL: URL, name: String = "Home") {
         let serverURL = manualURL.serverBaseURL()
@@ -34,6 +38,12 @@ public struct DiscoveredHomeAssistant: ImmutableMappable, Equatable {
             self.externalURL = serverURL
         }
         self.locationName = name
+    }
+
+    /// An instance reached through a Tailcat tunnel whose loopback URL is `localURL`.
+    public init(tailcat: TailcatConfiguration, localURL: URL, name: String?) {
+        self.init(manualURL: localURL, name: name ?? "Home")
+        self.tailcat = tailcat
     }
 
     private enum TransformError: Error {

@@ -29,6 +29,8 @@ extension ConnectionInfo.URLType: @retroactive CustomStringConvertible {
             return L10n.Settings.ConnectionSection.ExternalBaseUrl.title
         case .none:
             return L10n.Settings.ConnectionSection.NoBaseUrl.title
+        case .tailcat:
+            return L10n.Settings.ConnectionSection.TailcatUrl.title
         }
     }
 }

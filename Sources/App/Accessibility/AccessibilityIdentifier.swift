@@ -40,4 +40,8 @@ enum AccessibilityIdentifier: String {
     case settingsAddServer = "settings.servers.add"
     case connectionSettingsRegisterAsNewDevice = "connectionSettings.registerAsNewDevice"
     case connectionSettingsReplaceOldDevice = "connectionSettings.replaceOldDevice"
+    case connectionSettingsTailcat = "connectionSettings.tailcat"
+    case onboardingInvitationAccept = "onboarding.invitation.accept"
+    case tailcatSettingsStatus = "tailcatSettings.status"
+    case tailcatSettingsActiveConnection = "tailcatSettings.activeConnection"
 }
