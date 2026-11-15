@@ -189,6 +189,51 @@ final class TailcatLoopbackProxyTests: XCTestCase {
         waitUntil("the pipe is released") { proxy.activeConnectionCount == 0 }
     }
 
+    /// A dial that fails must reach the app as a network error, never as an HTTP status: a 4xx
+    /// from the token refresh would make the app ask the user to sign in again.
+    func testAFailedDialIsANetworkErrorNotAnHTTPResponse() throws {
+        let dialer = FakeTailcatDialer(results: [.failure(TailcatError(kind: .timeout))])
+        let proxy = try makeProxy(dialer: dialer)
+
+        let done = expectation(description: "response")
+        var result: (URLResponse?, Error?)
+        let session = URLSession(configuration: .ephemeral)
+        var request = URLRequest(url: proxy.localURL.appendingPathComponent("auth/token"))
+        request.httpMethod = "POST"
+        session.dataTask(with: request) { _, response, error in
+            result = (response, error)
+            done.fulfill()
+        }.resume()
+        wait(for: [done], timeout: 30)
+        session.invalidateAndCancel()
+
+        XCTAssertNil(result.0)
+        XCTAssertNotNil(result.1 as? URLError)
+    }
+
+    /// iOS can take a suspended app's listening socket away; the proxy has to listen again on the same
+    /// port by itself, since the frontend's origin, and with it its stored login, depends on the port.
+    func testListensAgainAfterTheSocketIsTakenAway() throws {
+        let proxy = try makeProxy(dialer: FakeTailcatDialer())
+        let port = proxy.port
+
+        proxy.breakListenerForTesting()
+        // The swapped descriptor only fails `accept` once something knocks; iOS wakes the loop itself.
+        if let knock = try? connect(to: port) {
+            Darwin.close(knock)
+        }
+
+        waitUntil("the proxy pipes connections again") { [unowned self] in
+            guard let fd = try? connect(to: port) else { return false }
+            defer { Darwin.close(fd) }
+            sendAll(Data("ping".utf8), to: fd)
+            shutdown(fd, SHUT_WR)
+            return readToEnd(fd).data == Data("ping".utf8)
+        }
+        XCTAssertEqual(proxy.port, port)
+        XCTAssertTrue(proxy.isListening)
+    }
+
     func testProbesForwardWhenThePreferredPortIsTaken() throws {
         let first = try makeProxy(dialer: FakeTailcatDialer(), preferredPort: 41001)
         let second = try makeProxy(dialer: FakeTailcatDialer(), preferredPort: first.port)

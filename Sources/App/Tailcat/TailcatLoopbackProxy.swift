@@ -14,6 +14,10 @@ import Shared
 final class TailcatLoopbackProxy {
     /// How far past the preferred port to look for a free one.
     static let portProbeCount = 64
+    /// Longest pause between attempts to listen again after the socket died.
+    static let maxRebindDelay: TimeInterval = 10
+    /// `accept` failing this many times in a row means the listening socket itself is broken.
+    private static let maxConsecutiveAcceptFailures = 100
     private static let bufferSize = 64 * 1024
 
     let port: UInt16
@@ -31,6 +35,7 @@ final class TailcatLoopbackProxy {
     /// Signalled once the current accept loop has closed its listening socket.
     private var acceptLoopExited: DispatchSemaphore?
     private var isStopped = false
+    private var isRebinding = false
     private var pipes = [ObjectIdentifier: Pipe]()
 
     /// Binds the first free port among `TailcatLocalPort.candidates(startingAt: preferredPort)`.
@@ -63,6 +68,16 @@ final class TailcatLoopbackProxy {
         lock.withLock { pipes.count }
     }
 
+    /// Makes the listening socket unusable, as iOS does when it reclaims a suspended app's sockets:
+    /// its descriptor is swapped for one that is not a socket, so `accept` fails for good.
+    func breakListenerForTesting() {
+        let fd = lock.withLock { listener }
+        guard fd >= 0 else { return }
+        let null = open("/dev/null", O_RDONLY)
+        dup2(null, fd)
+        Darwin.close(null)
+    }
+
     /// Whether the listening socket is open. iOS can reclaim it while the app is suspended.
     var isListening: Bool {
         lock.withLock { listener >= 0 }
@@ -70,14 +85,30 @@ final class TailcatLoopbackProxy {
 
     /// Re-binds the same port when the listening socket died (e.g. reclaimed while suspended).
     func ensureListening() {
-        let needsRebind = lock.withLock { !isStopped && listener < 0 }
+        let needsRebind = lock.withLock { !isStopped && listener < 0 && !isRebinding }
         guard needsRebind else { return }
+        lock.withLock { isRebinding = true }
+        defer { lock.withLock { isRebinding = false } }
         guard let fd = Self.bindLoopback(port: port) else {
             Current.Log.error("Tailcat: could not listen on loopback port \(port) again")
             return
         }
         lock.withLock { listener = fd }
         startAcceptLoop(on: fd)
+        Current.Log.info("Tailcat: listening on loopback port \(port) again")
+    }
+
+    /// Keeps trying to listen again after the socket died, backing off up to `maxRebindDelay`.
+    /// iOS can take the socket away from a suspended app and the accept loop may only find out
+    /// after the app is back in the foreground, so this cannot wait for the next lifecycle event.
+    private func scheduleRebind(after delay: TimeInterval) {
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + delay) { [self] in
+            guard !lock.withLock({ isStopped }) else { return }
+            ensureListening()
+            if !isListening {
+                scheduleRebind(after: min(delay * 2, Self.maxRebindDelay))
+            }
+        }
     }
 
     /// Closes the listener and every piped connection. Returns once the port is free again, so a
@@ -150,12 +181,16 @@ final class TailcatLoopbackProxy {
                 }
             }
             exited.signal()
+            if !lock.withLock({ isStopped }) {
+                scheduleRebind(after: 0.5)
+            }
         }
         thread.name = "io.home-assistant.tailcat.accept"
         thread.start()
     }
 
     private func acceptLoop(listener fd: Int32, wake: Int32) {
+        var consecutiveFailures = 0
         while true {
             var descriptors = [
                 pollfd(fd: fd, events: Int16(POLLIN), revents: 0),
@@ -175,9 +210,17 @@ final class TailcatLoopbackProxy {
 
             let client = accept(fd, nil, nil)
             if client < 0 {
-                if [EINTR, EAGAIN, ECONNABORTED, EMFILE, ENFILE].contains(errno) { continue }
-                break
+                let error = errno
+                consecutiveFailures += 1
+                guard consecutiveFailures < Self.maxConsecutiveAcceptFailures,
+                      [EINTR, EAGAIN, ECONNABORTED, EMFILE, ENFILE].contains(error) else { break }
+                if [EMFILE, ENFILE].contains(error) {
+                    // Out of descriptors: give the open connections a moment to finish.
+                    Thread.sleep(forTimeInterval: 0.1)
+                }
+                continue
             }
+            consecutiveFailures = 0
             var yes: Int32 = 1
             setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &yes, socklen_t(MemoryLayout<Int32>.size))
             setsockopt(client, IPPROTO_TCP, TCP_NODELAY, &yes, socklen_t(MemoryLayout<Int32>.size))

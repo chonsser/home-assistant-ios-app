@@ -1,4 +1,5 @@
 import Foundation
+import Network
 import Shared
 import UIKit
 
@@ -12,8 +13,10 @@ final class TailcatTunnelManager {
     static let shared = TailcatTunnelManager()
 
     /// How long one loopback connection waits for its tunnel stream, retries included. Covers the
-    /// couple of seconds Home Assistant needs to allowlist a freshly paired device.
-    static let dialTimeout: TimeInterval = 30
+    /// couple of seconds Home Assistant needs to restart its Tailcat server (to allowlist a freshly
+    /// paired device, say) plus a fresh client finding its way to it on a slow network, and stays
+    /// below the 60 second request timeout of URLSession and WebKit.
+    static let dialTimeout: TimeInterval = 45
     /// A suspension shorter than this keeps the tunnel client; longer ones start a fresh client,
     /// because the Go runtime's sockets may not have survived.
     static let backgroundResetThreshold: TimeInterval = 20
@@ -27,6 +30,8 @@ final class TailcatTunnelManager {
     private var tunnels = [String: Tunnel]()
     private var enteredBackgroundAt: Date?
     private var observers = [NSObjectProtocol]()
+    private var pathMonitor: NWPathMonitor?
+    private var lastPathSignature: String?
     private let makeSession: (TailcatConfiguration) -> TailcatClientSession
 
     init(makeSession: @escaping (TailcatConfiguration) -> TailcatClientSession = {
@@ -58,6 +63,37 @@ final class TailcatTunnelManager {
                 self?.applicationWillEnterForeground()
             },
         ]
+
+        let monitor = NWPathMonitor()
+        monitor.pathUpdateHandler = { [weak self] path in
+            self?.networkPathDidChange(to: Self.signature(of: path))
+        }
+        monitor.start(queue: DispatchQueue(label: "io.home-assistant.tailcat.path"))
+        pathMonitor = monitor
+    }
+
+    /// What identifies a network path for the tunnel: whether it is usable and over which interfaces.
+    private static func signature(of path: NWPath) -> String {
+        let interfaces = path.availableInterfaces.map { "\($0.type):\($0.name)" }
+        return "\(path.status):\(interfaces.joined(separator: ","))"
+    }
+
+    /// The tunnel client's sockets belong to the network it started on; after a switch (Wi-Fi to
+    /// cellular, a new Wi-Fi network) they no longer reach anything, and neither do its streams.
+    /// Starting fresh clients makes the next connection find a path over the current network.
+    func networkPathDidChange(to signature: String) {
+        let changed: Bool = lock.withLock {
+            defer { lastPathSignature = signature }
+            return lastPathSignature != nil && lastPathSignature != signature
+        }
+        guard changed else { return }
+        Current.Log.info("Tailcat: network path changed, starting new tunnel clients")
+        resetAllSessions()
+    }
+
+    private func resetAllSessions() {
+        let current: [Tunnel] = lock.withLock { Array(tunnels.values) }
+        current.forEach { $0.session.reset() }
     }
 
     /// The loopback URL serving `configuration`'s tunnel, starting the proxy if needed. `nil` when

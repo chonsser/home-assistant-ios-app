@@ -35,7 +35,8 @@ final class TailcatClientSessionTests: XCTestCase {
     private func session(_ factory: Factory) -> TailcatClientSession {
         TailcatClientSession(
             configuration: configuration,
-            attemptTimeout: 1,
+            freshAttemptTimeout: 2,
+            establishedAttemptTimeout: 1,
             retryDelay: 0.01,
             makeClient: factory.make
         )
@@ -78,20 +79,42 @@ final class TailcatClientSessionTests: XCTestCase {
         }
     }
 
-    func testAWorkingClientSurvivesASingleFailure() throws {
-        let client = FakeTailcatDialer(results: [
+    /// What a Tailcat server restart looks like from the app: the client that was working keeps a
+    /// session to the old process and its next dial times out, while a fresh client gets through.
+    func testAClientThatStopsGettingThroughIsReplacedAtOnce() throws {
+        let stale = FakeTailcatDialer(results: [
             .success(FakeTailcatConnection()),
-            .failure(TailcatError(kind: .failure)),
-            .success(FakeTailcatConnection()),
+            .failure(TailcatError(kind: .timeout)),
         ])
-        let factory = Factory([client])
+        let factory = Factory([stale])
         let session = session(factory)
+        _ = try session.dial(port: 8123, timeout: 5)
+
+        _ = try session.dial(port: 8123, timeout: 5)
+
+        XCTAssertEqual(factory.count, 2, "one failed dial is enough to start a new client")
+        XCTAssertEqual(stale.dials.count, 2, "the stale client is not tried again")
+        // Closing the stale client is what closes the dead streams it still carries.
+        waitUntil { stale.closes == 1 }
+    }
+
+    func testEstablishedClientsGetShorterAttempts() throws {
+        let client = FakeTailcatDialer()
+        let session = session(Factory([client]))
 
         _ = try session.dial(port: 8123, timeout: 5)
         _ = try session.dial(port: 8123, timeout: 5)
 
-        XCTAssertEqual(factory.count, 1)
-        XCTAssertEqual(client.closes, 0)
+        XCTAssertEqual(client.timeouts, [2, 1])
+    }
+
+    func testAttemptsNeverOutlastTheOverallTimeout() throws {
+        let client = FakeTailcatDialer()
+        let session = session(Factory([client]))
+
+        _ = try session.dial(port: 8123, timeout: 0.5)
+
+        XCTAssertLessThanOrEqual(try XCTUnwrap(client.timeouts.first), 0.5)
     }
 
     func testResetStartsAFreshClient() throws {

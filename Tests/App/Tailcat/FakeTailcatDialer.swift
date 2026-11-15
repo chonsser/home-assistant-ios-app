@@ -7,6 +7,7 @@ final class FakeTailcatDialer: TailcatDialing {
     private var results: [Result<FakeTailcatConnection, Error>]
     private let makeConnection: () -> FakeTailcatConnection
     private(set) var dialedPorts = [UInt16]()
+    private(set) var dialedTimeouts = [TimeInterval]()
     private(set) var closeCount = 0
 
     /// Each dial consumes the next result; once they run out, every dial gets a fresh connection.
@@ -19,11 +20,13 @@ final class FakeTailcatDialer: TailcatDialing {
     }
 
     var dials: [UInt16] { lock.withLock { dialedPorts } }
+    var timeouts: [TimeInterval] { lock.withLock { dialedTimeouts } }
     var closes: Int { lock.withLock { closeCount } }
 
     func dial(port: UInt16, timeout: TimeInterval) throws -> TailcatConnection {
         let result: Result<FakeTailcatConnection, Error> = lock.withLock {
             dialedPorts.append(port)
+            dialedTimeouts.append(timeout)
             return results.isEmpty ? .success(makeConnection()) : results.removeFirst()
         }
         return try result.get()

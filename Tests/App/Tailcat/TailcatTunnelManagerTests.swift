@@ -7,12 +7,36 @@ import XCTest
 final class TailcatTunnelManagerTests: XCTestCase {
     private var manager: TailcatTunnelManager!
     private var configurations = [TailcatConfiguration]()
+    private var clients = [FakeTailcatDialer]()
+    private let clientsLock = NSLock()
 
     override func setUp() {
         super.setUp()
-        manager = TailcatTunnelManager(makeSession: {
-            TailcatClientSession(configuration: $0, makeClient: { _ in FakeTailcatDialer() })
+        manager = TailcatTunnelManager(makeSession: { [unowned self] configuration in
+            TailcatClientSession(configuration: configuration, makeClient: { [unowned self] _ in
+                let client = FakeTailcatDialer()
+                clientsLock.withLock { clients.append(client) }
+                return client
+            })
         })
+    }
+
+    private var madeClients: [FakeTailcatDialer] {
+        clientsLock.withLock { clients }
+    }
+
+    private func waitUntil(_ condition: @escaping () -> Bool) {
+        wait(for: [expectation(for: NSPredicate { _, _ in condition() }, evaluatedWith: nil)], timeout: 30)
+    }
+
+    /// Opens a loopback connection so the tunnel dials and its client exists.
+    private func connect(to url: URL) throws {
+        let done = expectation(description: "request")
+        let session = URLSession(configuration: .ephemeral)
+        session.dataTask(with: url) { _, _, _ in done.fulfill() }.resume()
+        waitUntil { !self.madeClients.isEmpty }
+        session.invalidateAndCancel()
+        wait(for: [done], timeout: 30)
     }
 
     override func tearDown() {
@@ -60,6 +84,19 @@ final class TailcatTunnelManagerTests: XCTestCase {
         let restarted = try XCTUnwrap(manager.localURL(for: configuration()))
 
         XCTAssertEqual(restarted, first)
+    }
+
+    func testANetworkChangeStartsNewTunnelClients() throws {
+        let url = try XCTUnwrap(manager.localURL(for: configuration()))
+        manager.networkPathDidChange(to: "satisfied:wifi:en0")
+        try connect(to: url)
+        let first = try XCTUnwrap(madeClients.first)
+
+        manager.networkPathDidChange(to: "satisfied:wifi:en0")
+        XCTAssertEqual(first.closes, 0, "an unchanged path keeps the client")
+
+        manager.networkPathDidChange(to: "satisfied:cellular:pdp_ip0")
+        waitUntil { first.closes == 1 }
     }
 
     func testReturningFromTheBackgroundKeepsTheURL() throws {
